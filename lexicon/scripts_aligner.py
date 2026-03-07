@@ -108,9 +108,9 @@ def build_letters_map():
     letters_map["أ"] = letters_map["أ"] + ["o"]
     letters_map["#"] = ["#"]
     letters_map["_"] = ["_"]
-    letters_map["ل"] = letters_map["ل"] + [] + [
-        ""
-    ]  # A hack for the dropped lam in some North African dialects
+    letters_map["ل"] = (
+        letters_map["ل"] + [] + [""]
+    )  # A hack for the dropped lam in some North African dialects
 
     return letters_map, wikipedia_letters_map
 
