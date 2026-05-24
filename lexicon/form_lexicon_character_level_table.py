@@ -1,50 +1,11 @@
 import pandas as pd
 from pprint import pprint
-from scripts_aligner import align_word, build_letters_map
+from alignment_utils import align_word, build_letters_map
+
+# TODO: This should not be needed anymore
+from parse_lexicon_entries_from_responses import WORDS_NORMALIZATION
 
 DIALECTS = ["Algerian", "Egyptian", "Lebanese", "Moroccan", "Tunisian"]
-
-WORDS_NORMALIZATION = {
-    # Algeria
-    "Bnadem, Insan": "Insan",
-    "bera/barra": "bera / barra",
-    "Bezaf or Bzf": "Bezaf / Bzf",
-    "Blakar / plakar": "Blakar / plakar",
-    "sabah or saba7": "sabah / saba7",
-    "5ouk / khouk": "5ouk / khouk",
-    "8adak / hadak": "8adak / hadak",
-    "Fer7a / ferha": "Fer7a / ferha",
-    "Crava6a / cravata": "Crava6a / cravata",
-    "9osbor / kosbor": "9osbor / kosbor",
-    "Herb,8reb": "Herb / 8reb",
-    "Rou7 / rouh": "Rou7 / rouh",
-    "Gayla or gaila": "Gayla / gaila",
-    "Wahdi or wa7di": "Wahdi / wa7di",
-    "je ne l'ai jamais écrit en arabizi, je crois que si je devais le faire j'écrirai ce mot directement en caractères arabes": None,
-    # Lebanon
-    "djeij (but this means chicken, not mosque)": "djeij",
-    "Gharib / 8arib": "Gharib / 8arib",
-    "جراج jraj?": "jraj",
-    'hadi2it l wared (more so "jnayne" or "hadi2a" in lebanese dialect)': "hadi2it l wared",
-    # Morocco
-    "Stikhdam/ sti3mal/ khedem": "Stikhdam",
-    "Placard/ mariyo": "Placard",
-    "balakar (je sais pas ce que ca veut dire)": "balakar",
-    "sbah / sbah7 / sabah / saba7": "sbah / sbah7 / sabah / saba7",
-    "Skhun/ skhon": "Skhun / skhon",
-    "Teyara/ tayara": "Teyara / tayara",
-    "Ferran (torres)": "Ferran",
-    "Gal/ 9al": "Gal / 9al",
-    "Werda/ warda": "Werda / warda",
-    "Hrb or Hreb": "Hrb / Hreb",
-    # Tunisia
-    "behya / sem7a": "behya",
-    "sakhana": None,
-    "Skhana": None,
-    "Broda": None,
-    "Brouda": None,
-    "Ils jouent": None,
-}
 
 
 def main():
@@ -204,104 +165,107 @@ def main():
         if row.endswith("\\"):
             print(r"\midrule")
 
-    # Generate the reverse Table (Arabizi to Arabic)
-    reverse_wikipedia_dict = {}
+    # # Generate the reverse Table (Arabizi to Arabic)
+    # reverse_wikipedia_dict = {}
 
-    for key in wikipedia_dict.keys():
-        mappings = wikipedia_dict[key]
-        for mapping in mappings:
-            if mapping not in reverse_wikipedia_dict:
-                reverse_wikipedia_dict[mapping] = set()
-            reverse_wikipedia_dict[mapping].add(key)
+    # for key in wikipedia_dict.keys():
+    #     mappings = wikipedia_dict[key]
+    #     for mapping in mappings:
+    #         if mapping not in reverse_wikipedia_dict:
+    #             reverse_wikipedia_dict[mapping] = set()
+    #         reverse_wikipedia_dict[mapping].add(key)
 
-    def get_letter_mappings_string(letter, mappings):
-        """Get a string representation of letter mappings for the Table."""
-        tuples = sorted(mappings.items(), key=lambda t: -t[1])
-        letter = (
-            letter
-            if letter not in [" ", ""]
-            else "sp." if letter == " " else r"$\epsilon$"
-        )
-        mappings = [
-            t[0] if t[0] not in [" ", ""] else "sp." if t[0] == " " else r"$\epsilon$"
-            for t in tuples
-        ]
+    # def get_letter_mappings_string(letter, mappings):
+    #     """Get a string representation of letter mappings for the Table."""
+    #     tuples = sorted(mappings.items(), key=lambda t: -t[1])
+    #     letter = (
+    #         letter
+    #         if letter not in [" ", ""]
+    #         else "sp." if letter == " " else r"$\epsilon$"
+    #     )
+    #     mappings = [
+    #         t[0] if t[0] not in [" ", ""] else "sp." if t[0] == " " else r"$\epsilon$"
+    #         for t in tuples
+    #     ]
 
-        rendered_mappings = [
-            (
-                rf"\AR{{{c}}}"
-                if c not in ([" ", ""] + ["چ"] + ["ڜ", "ڤ", "ڭ", "ڥ"])
-                else (
-                    "sp."
-                    if c == " "
-                    else (
-                        "$\\epsilon$"
-                        if c == ""
-                        else rf"\FR{{{c}}}" if c == "چ" else rf"\textkurdish{{{c}}}"
-                    )
-                )
-            )
-            for c in mappings
-        ]
+    #     rendered_mappings = [
+    #         (
+    #             rf"\AR{{{c}}}"
+    #             if c not in ([" ", ""] + ["چ"] + ["ڜ", "ڤ", "ڭ", "ڥ"])
+    #             else (
+    #                 "sp."
+    #                 if c == " "
+    #                 else (
+    #                     "$\\epsilon$"
+    #                     if c == ""
+    #                     else rf"\FR{{{c}}}" if c == "چ" else rf"\textkurdish{{{c}}}"
+    #                 )
+    #             )
+    #         )
+    #         for c in mappings
+    #     ]
 
-        colors = [
-            (
-                "red"
-                if letter not in ["sp.", r"$\epsilon$"]
-                and (
-                    letter not in reverse_wikipedia_dict
-                    or m not in reverse_wikipedia_dict[letter]
-                )
-                else "black"
-            )
-            for m in mappings
-        ]
-        # return " ".join([f"{'sp.' if t[0] == ' ' else (t[0] if t[0] else '$epsilon$')} ({t[1]})" for t in tuples])
-        return " ".join(
-            [
-                f"\\textcolor{{{color}}}{{{m}~({t[1]})}}"
-                for m, t, color in zip(rendered_mappings, tuples, colors)
-            ]
-        )
+    #     colors = [
+    #         (
+    #             "red"
+    #             if letter not in ["sp.", r"$\epsilon$"]
+    #             and (
+    #                 letter not in reverse_wikipedia_dict
+    #                 or m not in reverse_wikipedia_dict[letter]
+    #             )
+    #             else "black"
+    #         )
+    #         for m in mappings
+    #     ]
+    #     # return " ".join([f"{'sp.' if t[0] == ' ' else (t[0] if t[0] else '$epsilon$')} ({t[1]})" for t in tuples])
+    #     return " ".join(
+    #         [
+    #             f"\\textcolor{{{color}}}{{{m}~({t[1]})}}"
+    #             for m, t, color in zip(rendered_mappings, tuples, colors)
+    #         ]
+    #     )
 
-    # Generate the latex table for letter mappings
-    dataframes = {}
-    for dialect in DIALECTS:
-        tuples = sum(get_all_alignments(df, dialect), [])
+    # # Generate the latex table for letter mappings
+    # dataframes = {}
+    # for dialect in DIALECTS:
+    #     tuples = sum(get_all_alignments(df, dialect), [])
 
-        char_mappings = {}
-        for ar_char, en_char in tuples:
-            if en_char not in char_mappings:
-                char_mappings[en_char] = {}
-            char_mappings[en_char][ar_char] = char_mappings[en_char].get(ar_char, 0) + 1
+    #     char_mappings = {}
+    #     for ar_char, en_char in tuples:
+    #         if en_char not in char_mappings:
+    #             char_mappings[en_char] = {}
+    #         char_mappings[en_char][ar_char] = char_mappings[en_char].get(ar_char, 0) + 1
 
-        characters = sorted(char_mappings.keys())
-        rendered_characters = [
-            (
-                letter
-                if letter not in [" ", ""]
-                else "sp." if letter == " " else r"$\epsilon$"
-            )
-            for letter in characters
-        ]
-        dialect_df = pd.DataFrame(
-            [
-                {dialect: get_letter_mappings_string(c, char_mappings[c])}
-                for c in characters
-            ],
-            index=rendered_characters,
-        )
-        dataframes[dialect] = dialect_df
+    #     characters = sorted(char_mappings.keys())
+    #     rendered_characters = [
+    #         (
+    #             letter
+    #             if letter not in [" ", ""]
+    #             else "sp." if letter == " " else r"$\epsilon$"
+    #         )
+    #         for letter in characters
+    #     ]
+    #     dialect_df = pd.DataFrame(
+    #         [
+    #             {dialect: get_letter_mappings_string(c, char_mappings[c])}
+    #             for c in characters
+    #         ],
+    #         index=rendered_characters,
+    #     )
+    #     dataframes[dialect] = dialect_df
 
-    table_df = pd.concat(dataframes, axis=1, join="outer")
-    table_df.fillna("", inplace=True)
-    table_df.sort_index(inplace=True)
+    # table_df = pd.concat(dataframes, axis=1, join="outer")
+    # table_df.fillna("", inplace=True)
+    # table_df.sort_index(inplace=True)
 
-    table_str = table_df.to_latex()
-    for row in table_str.split("\n"):
-        print(row)
-        if row.endswith("\\"):
-            print(r"\midrule")
+    # table_str = table_df.to_latex()
+    # for row in table_str.split("\n"):
+    #     print(row)
+    #     if row.endswith("\\"):
+    #         print(r"\midrule")
+
+
+
 
     # ### Look at the transliteartions of common words
 
