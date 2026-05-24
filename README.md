@@ -5,4 +5,4 @@
 
 #### Scripts:
 * `survey_data_parsing.py` - parse the Qualtrics raw responses into a csv file.
-* `semanticscholar_analysis/semanticscholar_dialects_in_studies` - Identify the representation of the dialects in Arabizi studies.
+* `semanticscholar_analysis/semanticscholar_dialects_in_studies.py` - Identify the representation of the dialects in Arabizi studies.
