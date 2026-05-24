@@ -54,7 +54,7 @@ def build_letters_map():
     letters_map["إ"] = letters_map["إ"] + ["e"]
     letters_map["ي"] = letters_map["ي"] + ["e"]
     letters_map["ق"] = letters_map["ق"] + ["k", "'"]
-    letters_map["ا"] = letters_map["ا"] + ["", "2"] + ["e"]
+    letters_map["ا"] = letters_map["ا"] + ["", "2"] + ["e", "i"]
     letters_map["ت"] = letters_map["ت"] + ["tt"]
     letters_map["ى"] = letters_map["ى"] + ["ah"]
     letters_map["ف"] = letters_map["ف"] + ["ph"]
