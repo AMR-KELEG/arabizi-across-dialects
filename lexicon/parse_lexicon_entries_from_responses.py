@@ -1,6 +1,7 @@
 import os
 import re
 import pandas as pd
+from collections import Counter
 from alignment_utils import align_word
 
 for directory in ["../data/lexicon", "../data/lexicon_review"]:
@@ -22,13 +23,11 @@ WORDS_NORMALIZATION = {
     "Rou7 / rouh": "Rou7 / rouh",
     "Gayla or gaila": "Gayla / gaila",
     "Wahdi or wa7di": "Wahdi / wa7di",
-
     # Lebanon
     "djeij (but this means chicken, not mosque)": "djeij",
     "Gharib / 8arib": "Gharib / 8arib",
     "جراج jraj?": "jraj",
     'hadi2it l wared (more so "jnayne" or "hadi2a" in lebanese dialect)': "hadi2it l wared",
-
     # Morocco
     "Stikhdam/ sti3mal/ khedem": "Stikhdam",
     "Placard/ mariyo": "Placard",
@@ -40,10 +39,10 @@ WORDS_NORMALIZATION = {
     "Gal/ 9al": "Gal / 9al",
     "Werda/ warda": "Werda / warda",
     "Hrb or Hreb": "Hrb / Hreb",
-
     # Tunisia
     "behya / sem7a": "behya",
 }
+
 
 def form_inspection_data():
     for dialect in ["Algerian", "Egyptian", "Lebanese", "Moroccan", "Tunisian"]:
@@ -53,25 +52,35 @@ def form_inspection_data():
 
         rows = []
 
-        n_multiple_mappings = sum(["/" in m for word in words for m in df[word].dropna()])
+        n_multiple_mappings = sum(
+            ["/" in m for word in words for m in df[word].dropna()]
+        )
         for word in words:
-            mappings = sorted(
-                set(
-                    [
-                        w
-                        for l in df[word]
-                        .dropna()
-                        .apply(lambda s: s.strip().lower().split("/"))
-                        .tolist()
-                        for w in l
-                    ]
-                ),
+            raw_mappings = [
+                w
+                for l in df[word]
+                .dropna()
+                .apply(lambda s: s.strip().lower().split("/"))
+                .tolist()
+                for w in l
+            ]
+
+            unique_mappings = sorted(
+                set(raw_mappings),
                 key=lambda s: len(s),
             )
-            for mapping in mappings:
+            for mapping in unique_mappings:
                 alignment_len, alignment = align_word(word.strip(), mapping.strip())
-                ar_row = {"Word": word, "Wrong Alignment?": "", "Invalid Transliteration?": ""}
-                lat_row = {"Word": mapping, "Wrong Alignment?": "", "Invalid Transliteration?": ""}
+                ar_row = {
+                    "Word": word,
+                    "Frequency": sum([w == mapping for w in raw_mappings]),
+                    "Invalid Transliteration?": "",
+                }
+                lat_row = {
+                    "Word": mapping,
+                    "Frequency": "",
+                    "Invalid Transliteration?": "",
+                }
                 if alignment:
                     for i, step in enumerate(alignment):
                         ar_row[f"step_{i}"] = step[0]
@@ -83,9 +92,10 @@ def form_inspection_data():
         output_df = pd.DataFrame(rows)
         output_df.to_excel(f"../data/lexicon_review/{dialect}.xlsx", index=False)
 
-        print(dialect, int(output_df.shape[0]/3))
+        print(dialect, int(output_df.shape[0] / 3))
         print(f"Number of words with multiple mappings: {n_multiple_mappings}")
         print()
+
 
 def main():
     df = pd.read_csv("../data/parsed_survey_responses.csv")
@@ -119,6 +129,7 @@ def main():
 
     # Generate the inspection data
     form_inspection_data()
+
 
 if __name__ == "__main__":
     main()
