@@ -261,10 +261,10 @@ def full_dialect_data_pipeline(raw_input_filepath: str, final_output_filepath: s
                     idx, "Social media platforms where Arabizi is used (others)"
                 ]
                 if pd.notna(replacement_text):
-                    df.loc[idx, "Social media platforms where Arabizi is used"] = (
-                        original_value.replace(
-                            "Other (Please specify)", str(replacement_text)
-                        )
+                    df.loc[
+                        idx, "Social media platforms where Arabizi is used"
+                    ] = original_value.replace(
+                        "Other (Please specify)", str(replacement_text)
                     )
                 else:
                     # If no replacement text, just remove "Other (Please specify)"

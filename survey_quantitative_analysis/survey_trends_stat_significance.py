@@ -15,6 +15,7 @@ from statsmodels.stats.multitest import multipletests
 font = {"size": 8}
 matplotlib.rc("font", **font)
 
+# Note: The values are hard-coded here and not read from the data!
 arabizi_perception = {
     "Algeria": [2, 14, 5, 1, 0],
     "Egypt": [6, 22, 5, 0, 0],
