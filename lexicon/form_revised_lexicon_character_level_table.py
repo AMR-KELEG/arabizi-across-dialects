@@ -44,7 +44,11 @@ def form_mappings_df(dialect):
     for df in [original_df, reviewed_df]:
         df.dropna(subset="Word", inplace=True)
 
-    assert original_df.shape[0] == reviewed_df.shape[0]
+    assert original_df.shape[0] == reviewed_df.shape[0], (
+        dialect,
+        original_df.shape[0],
+        reviewed_df.shape[0],
+    )
     original_df.shape[0]
 
     discard_column = "Invalid Transliteration?\n\nThese will be discarded"
@@ -57,12 +61,19 @@ def form_mappings_df(dialect):
         arabic_word = original_arabic_row["Word"].strip()
         transliteration = original_transliterated_row["Word"].strip()
 
-        transliteration_dictionary[(arabic_word, transliteration)] = {
-            "original_steps": extract_steps(
-                original_arabic_row, original_transliterated_row
-            ),
-            "frequency": original_arabic_row["Frequency"],
-        }
+        # Same transliteration might exist multiple times,
+        # as the frequency is based on the case-sensitive versions
+        if (arabic_word, transliteration) not in transliteration_dictionary:
+            transliteration_dictionary[(arabic_word, transliteration)] = {
+                "original_steps": extract_steps(
+                    original_arabic_row, original_transliterated_row
+                ),
+                "frequency": original_arabic_row["Frequency"],
+            }
+        else:
+            transliteration_dictionary[(arabic_word, transliteration)][
+                "frequency"
+            ] += original_arabic_row["Frequency"]
 
     for i in range(0, reviewed_df.shape[0], 2):
         reviewed_arabic_row = reviewed_df.iloc[i]

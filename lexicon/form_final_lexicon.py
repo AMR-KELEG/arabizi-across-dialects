@@ -51,6 +51,13 @@ def main():
         )
         final_df.index = dialect_df.index
 
+        corrected_entries_dict = {
+            "Grafata ( I suppose you meant a “ Tie” )": "Grafata",
+            'cadeau (we use the french word in my dialect) but if needed I\'d wirte "hdiya"': "hdiya",
+            "This word is not a dish, tchebchaq": "tchebchaq",
+        }
+        final_df = final_df.map(lambda v: corrected_entries_dict.get(v, v))
+
         final_df.to_csv(Path(OUTPUT_DIR, f"{dialect}_lexicon_final.tsv", sep="\t"))
 
 
