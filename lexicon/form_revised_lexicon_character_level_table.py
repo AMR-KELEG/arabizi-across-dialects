@@ -1,8 +1,5 @@
 import pandas as pd
-from form_lexicon_character_level_table import (
-    get_letter_mappings_string,
-    build_letters_map,
-)
+from alignment_utils import get_letter_mappings_string
 
 pd.set_option("display.max_colwidth", None)
 
@@ -57,8 +54,8 @@ def form_mappings_df(dialect):
         original_arabic_row = original_df.iloc[i]
         original_transliterated_row = original_df.iloc[i + 1]
 
-        arabic_word = original_arabic_row["Word"]
-        transliteration = original_transliterated_row["Word"]
+        arabic_word = original_arabic_row["Word"].strip()
+        transliteration = original_transliterated_row["Word"].strip()
 
         transliteration_dictionary[(arabic_word, transliteration)] = {
             "original_steps": extract_steps(
@@ -71,12 +68,13 @@ def form_mappings_df(dialect):
         reviewed_arabic_row = reviewed_df.iloc[i]
         reviewed_transliterated_row = reviewed_df.iloc[i + 1]
 
-        arabic_word = reviewed_arabic_row["Word"]
-        transliteration = reviewed_transliterated_row["Word"]
+        arabic_word = reviewed_arabic_row["Word"].strip()
+        transliteration = reviewed_transliterated_row["Word"].strip()
 
-        transliteration_dictionary[(arabic_word, transliteration)][
-            "reviewed_steps"
-        ] = extract_steps(reviewed_arabic_row, reviewed_transliterated_row)
+        transliteration_dictionary[(arabic_word, transliteration)]["reviewed_steps"] = (
+            extract_steps(reviewed_arabic_row, reviewed_transliterated_row)
+        )
+        # Discard both "Yes" and "Maybe"
         transliteration_dictionary[(arabic_word, transliteration)]["discard"] = (
             str(reviewed_df.iloc[i][discard_column]) != "nan"
         )
@@ -89,79 +87,82 @@ def form_mappings_df(dialect):
     return transliteration_dictionary
 
 
-## Generate the table
-mapped_dfs = {}
-for dialect in DIALECTS:
-    transliteration_dictionary = form_mappings_df(dialect)
-    mapped_df = pd.DataFrame(transliteration_dictionary).T.reset_index()
-    print(
-        dialect,
-        "Discarded transliterations:",
-        mapped_df.apply(
-            lambda row: int(row["frequency"]) * int(row["discard"]), axis=1
-        ).sum(),
-        "Out of: ",
-        mapped_df["frequency"].sum(),
-    )
-    print(
-        "Modified transliterations:",
-        mapped_df["modified"].sum(),
-        "out of:",
-        mapped_df.shape[0],
-    )
-    print()
-    mapped_dfs[dialect] = mapped_df
-
-# Generate the latex table for letter mappings
-dataframes = {}
-for dialect in DIALECTS:
-    mapped_df = mapped_dfs[dialect]
-    tuples = [
-        t
-        for l, f in zip(
-            mapped_df[(mapped_df["discard"] == False)]["reviewed_steps"].tolist(),
-            mapped_df[(mapped_df["discard"] == False)]["frequency"].tolist(),
+def main():
+    ## Generate the table
+    mapped_dfs = {}
+    for dialect in DIALECTS:
+        transliteration_dictionary = form_mappings_df(dialect)
+        mapped_df = pd.DataFrame(transliteration_dictionary).T.reset_index()
+        print(
+            dialect,
+            "Discarded transliterations:",
+            mapped_df.apply(
+                lambda row: int(row["frequency"]) * int(row["discard"]), axis=1
+            ).sum(),
+            "Out of: ",
+            mapped_df["frequency"].sum(),
         )
-        for t in list(l)
-        for _ in range(int(f))
-    ]
-    char_mappings = {}
-    for ar_char, en_char in tuples:
-        if ar_char not in char_mappings:
-            char_mappings[ar_char] = {}
-        char_mappings[ar_char][en_char] = char_mappings[ar_char].get(en_char, 0) + 1
+        print(
+            "Modified transliterations:",
+            mapped_df["modified"].sum(),
+            "out of:",
+            mapped_df.shape[0],
+        )
+        print()
+        mapped_dfs[dialect] = mapped_df
 
-    characters = sorted(char_mappings.keys())
-    rendered_characters = [
-        (
-            rf"\AR{{{c}}}"
-            if c not in ([" ", ""] + ["چ"] + ["ڜ", "ڤ", "ڭ", "ڥ"])
-            else (
-                "sp."
-                if c == " "
+    # Generate the latex table for letter mappings
+    dataframes = {}
+    for dialect in DIALECTS:
+        mapped_df = mapped_dfs[dialect]
+        tuples = [
+            t
+            for l, f in zip(
+                mapped_df[(mapped_df["discard"] == False)]["reviewed_steps"].tolist(),
+                mapped_df[(mapped_df["discard"] == False)]["frequency"].tolist(),
+            )
+            for t in list(l)
+            for _ in range(int(f))
+        ]
+        char_mappings = {}
+        for ar_char, en_char in tuples:
+            if ar_char not in char_mappings:
+                char_mappings[ar_char] = {}
+            char_mappings[ar_char][en_char] = char_mappings[ar_char].get(en_char, 0) + 1
+
+        characters = sorted(char_mappings.keys())
+        rendered_characters = [
+            (
+                rf"\AR{{{c}}}"
+                if c not in ([" ", ""] + ["چ"] + ["ڜ", "ڤ", "ڭ", "ڥ"])
                 else (
-                    r"$\epsilon$"
-                    if c == ""
-                    else rf"\FR{{{c}}}"
-                    if c == "چ"
-                    else rf"\textkurdish{{{c}}}"
+                    "sp."
+                    if c == " "
+                    else (
+                        r"$\epsilon$"
+                        if c == ""
+                        else rf"\FR{{{c}}}" if c == "چ" else rf"\textkurdish{{{c}}}"
+                    )
                 )
             )
-        )
-        for c in characters
-    ]
-    dialect_df = pd.DataFrame(
-        [
-            {dialect: get_letter_mappings_string(c, char_mappings[c])}
             for c in characters
-        ],
-        index=rendered_characters,
-    )
-    dataframes[dialect] = dialect_df
+        ]
+        dialect_df = pd.DataFrame(
+            [
+                {dialect: get_letter_mappings_string(c, char_mappings[c])}
+                for c in characters
+            ],
+            index=rendered_characters,
+        )
+        dataframes[dialect] = dialect_df
 
-table_df = pd.concat(dataframes, axis=1, join="outer")
-table_df.fillna("", inplace=True)
+    table_df = pd.concat(dataframes, axis=1, join="outer")
+    table_df.fillna("", inplace=True)
 
-table_str = table_df.to_latex(escape=False)
+    table_str = table_df.to_latex(escape=False)
 
-print(table_str)
+    print(table_str)
+
+
+if __name__ == "__main__":
+    main()

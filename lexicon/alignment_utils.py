@@ -181,6 +181,37 @@ def align_word(arabic_word, transliterated_word):
     return max_len, max_alignment
 
 
+def get_letter_mappings_string(letter, mappings):
+    """Get a string representation of letter mappings for the Table."""
+    tuples = sorted(mappings.items(), key=lambda t: -t[1])
+    letter = (
+        letter if letter not in [" ", ""] else "sp." if letter == " " else r"$\epsilon$"
+    )
+    mappings = [
+        t[0] if t[0] not in [" ", ""] else "sp." if t[0] == " " else r"$\epsilon$"
+        for t in tuples
+    ]
+    colors = [
+        (
+            "red"
+            if letter not in ["sp.", r"$\epsilon$"]
+            and (
+                letter not in wikipedia_letters_map
+                or m not in wikipedia_letters_map[letter]
+            )
+            else "black"
+        )
+        for m in mappings
+    ]
+
+    return " ".join(
+        [
+            f"\\textcolor{{{color}}}{{{m}~({t[1]})}}"
+            for m, t, color in zip(mappings, tuples, colors)
+        ]
+    )
+
+
 if __name__ == "__main__":
     arabic_sentence = input("Arabic sentence?\n").strip().lower()
     arabizi_sentence = input("Arabizi sentence?\n").strip().lower()

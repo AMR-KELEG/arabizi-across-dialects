@@ -5,7 +5,7 @@
 ### Parsing the data (Note: the data is not released for privacy reasons)
 - `python survey_data_parsing.py --input_filepath data/raw_survey_responses.csv --output_filepath data/parsed_survey_responses.csv`
 
-### Quantiative Analysis
+### (1) Quantiative Analysis
 - Generate the quanitative analysis plots (Requires access to the parsed data):<br/>
 `cd survey_quantitative_analysis && python generate_survey_plots.py`
 
@@ -13,18 +13,20 @@
 `cd survey_quantitative_analysis && python survey_trends_stat_significance.py`
 
 
-### Lexicon
+### (2) Lexicon
 - Parse the raw lexicon of Arabic-Arabizi words:<br/>
 `cd lexicon && python parse_lexicon_entries_from_responses.py`
   - Outputs:
     - data/lexicon/*_raw.tsv: original responses provided by users.
-    - data/lexicon/*_raw.tsv: responses provided by users after unifying the format for words with multiple provided transliterations.
+    - data/lexicon/*_clean.tsv: responses provided by users after unifying the format for words with multiple provided transliterations.
     - data/lexicon_review/*: the Arabic-Latin alignments identified by the algorithm
     - data/lexicon_reviewed/*: the manually corrected Arabic-Latin alignments.
 
-- Form the character-level mapping Table based on the original responses:<br/>
+- Form the character-level mapping Table based on the manually validated responses:<br/>
 `cd lexicon && python form_revised_lexicon_character_level_table.py`
 
+- Form the final lexicon after discarding the invalid entries:<br/>
+`cd lexicon && python form_final_lexicon.py`
 
 #### Scripts:
 * `survey_data_parsing.py` - parse the Qualtrics raw responses into a csv file.
