@@ -2,3 +2,4 @@ gradio>=6.0
 huggingface_hub>=2.2
 pandas>=2.0
 openpyxl>=3.1
+spaces==0.51.3

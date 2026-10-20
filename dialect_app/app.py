@@ -14,6 +14,7 @@ import csv
 import glob
 import json
 import os
+import random
 import re
 import tempfile
 import threading
@@ -24,6 +25,7 @@ import gradio as gr
 from huggingface_hub import batch_bucket_files, sync_bucket
 from huggingface_hub.utils import disable_progress_bars
 
+import spaces
 # ---------------------------------------------------------------- Dictionary
 # The dictionary lives in a Hugging Face bucket, VARabi/arabizi by default (set ARABIZI_BUCKET to use
 # another). The bucket is private, so reading it takes a token that can see it: a local `hf auth login`,
@@ -42,6 +44,8 @@ from huggingface_hub.utils import disable_progress_bars
 #   from users, so a bad file or entry is skipped with a warning instead of stopping the app. Saving them
 #   takes a token that can write.
 BUCKET = os.environ.get("ARABIZI_BUCKET", "VARabi/arabizi")
+HERE = os.path.dirname(os.path.abspath(__file__))
+FLAG_DIR = os.path.join(HERE, "flags")
 ARABIC = re.compile(r"[؀-ۿ]")
 # What a user may type, and so what can be saved: the characters words.csv uses. Latin letters (accented
 # ones too), digits, spaces, apostrophes (straight or curly) and hyphens, with at least one letter or digit
@@ -245,7 +249,7 @@ def word_choices(code):
 def placeholder(code, idx):
     if idx is None:
         return "Choose a word first"
-    return f'Write "{DIALECTS[code]["words"][idx][1]}" in arabizi…'
+    return f'Write "{DIALECTS[code]["words"][idx][1]}" in Arabizi (Franco)…'
 
 
 # ---------------------------------------------------------------- Events
@@ -344,7 +348,7 @@ footer { display: none !important; }
 #body .form { background: transparent !important; border: 0 !important; box-shadow: none !important; }
 #wordpick, #wordpick .container, #wordpick .wrap-inner, #wordpick .secondary-wrap { padding: 0 !important; border: 0 !important;
   background: transparent !important; box-shadow: none !important; overflow: visible !important; }
-#wordpick [data-testid="block-info"] { font-size: 12px !important; letter-spacing: .14em; text-transform: uppercase; color: var(--ax-muted) !important;
+#wordpick [data-testid="block-info"] { font-size: 10px !important; letter-spacing: .14em; text-transform: uppercase; color: var(--ax-muted) !important;
   font-weight: 500; margin-bottom: 6px; background: none !important; padding: 0 !important; }
 #wordpick .container > .wrap { border: 1px solid var(--ax-line) !important; border-radius: 14px !important; background: var(--ax-field) !important;
   box-shadow: none !important; }
@@ -362,11 +366,11 @@ footer { display: none !important; }
 #composer { gap: 8px !important; flex-wrap: nowrap !important; align-items: stretch; }
 #word, #word label, #word .input-container { min-width: 0; padding: 0 !important; border: 0 !important;
   background: transparent !important; box-shadow: none !important; overflow: visible !important; }
-#word textarea, #word input { font-family: var(--ax-mono) !important; font-size: 17px !important; padding: 13px 18px !important;
+#word textarea, #word input { font-family: var(--ax-mono) !important; font-size: 10px !important; padding: 13px 18px !important;
   border-radius: 999px !important; border: 1px solid var(--ax-line) !important; background: var(--ax-field) !important;
   color: var(--ax-ink) !important; box-shadow: none !important; }
 #word textarea { white-space: nowrap; overflow: hidden !important; resize: none; }
-#word textarea::placeholder { text-overflow: ellipsis; }
+#word textarea::placeholder { text-overflow: ellipsis; font-size: 10px; }
 #word textarea:focus, #word input:focus { outline: 2px solid var(--ax-indigo) !important; border-color: transparent !important; }
 #check { flex: none !important; width: auto !important; min-width: 0 !important; padding: 0 22px !important; border: 0 !important;
   border-radius: 999px !important; background: var(--ax-indigo) !important; color: var(--ax-on-indigo) !important;
@@ -379,9 +383,14 @@ footer { display: none !important; }
 #result:has(.verdict.idle) { display: none !important; }
 #result:has(.verdict.hit) { border-top-color: var(--ax-good) !important; }
 #result:has(.verdict.miss) { border-top-color: var(--ax-bad) !important; }
-#result:has(.verdict.invalid) { border-top-color: var(--ax-warn) !important; }
-.verdict { font-size: 15px; line-height: 1.55; color: var(--ax-ink); }
-.verdict .meaning { font-size: 12px; color: var(--ax-muted); margin-top: 6px; }
+.verdict { font-size: 15px; line-height: 1.55; color: black; }
+.verdict .meaning { font-size: 10px; color: black; margin-top: 6px; }
+
+.large-dropdown input,
+.large-dropdown sorted-list,
+.large-dropdown ul li {
+    font-size: 10px !important;
+}
 """.replace("STAR", STAR)
 # One flag per dialect, keyed on the radio's value (the dialect code)
 CSS += "".join(f'#dialects label:has(input[value="{k}"])::before {{ background-image: url({uri}); }}\n'
@@ -401,10 +410,12 @@ HEAD = """
 """
 
 # ---------------------------------------------------------------- Layout
+
+
 with gr.Blocks(title="Arabizi") as demo:
     with gr.Column(elem_id="card"):
-        gr.HTML(elem_id="mast", padding=False, value='<header id="masthead"><h1 lang="ar">عربيزي</h1>'
-                '<div class="sub">Arabizi · type it like you text it</div></header>')
+        gr.HTML(elem_id="mast", padding=False, value='<header id="masthead">'
+                '<div class="sub">Arabizi (Franco) · type it like you text it</div></header>')
         dialect = gr.Radio(choices=CHOICES, value=START, show_label=False, elem_id="dialects", container=False)
         with gr.Column(elem_id="body"):
             wordpick = gr.Dropdown(choices=word_choices(START), value=None, label="Choose a word", elem_id="wordpick")
@@ -418,8 +429,12 @@ with gr.Blocks(title="Arabizi") as demo:
 
     dialect.change(choose, dialect, [wordpick, out, word, check_btn])
     wordpick.change(pick, [wordpick, dialect], [out, word, check_btn])
-    word.submit(check, [word, dialect, wordpick, visit], [out, visit])
-    check_btn.click(check, [word, dialect, wordpick, visit], [out, visit])
+    word.submit(check, [word, dialect, wordpick], out)
+    check_btn.click(check, [word, dialect, wordpick], out)
+
+@spaces.GPU
+def main():
+    demo.launch(css=CSS, head=HEAD, share=True, debug=True)
 
 if __name__ == "__main__":
-    demo.launch(css=CSS, head=HEAD)
+    main()
