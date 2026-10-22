@@ -180,7 +180,7 @@ with tempfile.TemporaryDirectory(prefix="arabizi-") as data:
 
 # ---------------------------------------------------------------- Replies
 # The same for every dialect; {w} is the user's spelling
-HIT = 'Right! We have indeed encounter the spelling "{w}" before.'
+HIT = 'Right! We have indeed encountered the spelling "{w}" before.'
 # MISS = 'Not quite. "{w}" isn\'t a spelling we know for this word.'
 MISS_SAVED = 'Not quite. "{w}" isn\'t a spelling we know for this word yet. Thanks, we\'ve added it to our list.'
 INVALID = 'Please use Latin letters and numbers only.'
