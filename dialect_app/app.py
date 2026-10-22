@@ -4,7 +4,7 @@ Pick a dialect, pick one of its Arabic words, write it in arabizi, and get a
 verdict: match (one of the spellings people actually use) or no match. Every spelling
 is saved, and one that didn't match counts as a match once the app restarts.
 
-The words live in the Hugging Face bucket VARabi/arabizi (see "Dictionary" below).
+The words live in the Hugging Face bucket VARabi/VARabiziLex-bucket (see "Dictionary" below).
 
 Run:  pip install -r requirements.txt   then   hf auth login   then   python app.py
 """
@@ -27,7 +27,7 @@ from huggingface_hub.utils import disable_progress_bars
 
 import spaces
 # ---------------------------------------------------------------- Dictionary
-# The dictionary lives in a Hugging Face bucket, VARabi/arabizi by default (set ARABIZI_BUCKET to use
+# The dictionary lives in a Hugging Face bucket, VARabi/VARabiziLex-bucket by default (set ARABIZI_BUCKET to use
 # another). The bucket is private, so reading it takes a token that can see it: a local `hf auth login`,
 # or an HF_TOKEN secret on a Space. It is downloaded once at startup; restart the app to pick up changes.
 # dialects.csv — one row per dialect: code, name, arabic. Row order is the flag-strip order, and the
@@ -44,7 +44,7 @@ import spaces
 #   submitted at least MIN_SUBMISSIONS times for a word is added to that word's spellings. These files come
 #   from users, so a bad file or entry is skipped with a warning instead of stopping the app. Saving them
 #   takes a token that can write.
-BUCKET = os.environ.get("ARABIZI_BUCKET", "VARabi/arabizi")
+BUCKET = os.environ.get("ARABIZI_BUCKET", "VARabi/VARabiziLex-bucket")
 HERE = os.path.dirname(os.path.abspath(__file__))
 FLAG_DIR = os.path.join(HERE, "flags")
 ARABIC = re.compile(r"[؀-ۿ]")
