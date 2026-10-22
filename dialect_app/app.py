@@ -390,6 +390,8 @@ footer { display: none !important; }
 #result:has(.verdict.miss) { border-top-color: var(--ax-bad) !important; }
 .verdict { font-size: 15px; line-height: 1.55; color: black; }
 .verdict .meaning { font-size: 10px; color: black; margin-top: 6px; }
+/* Keep the reply black in Gradio's dark theme too, which would otherwise colour it near-white on the white box */
+#out .verdict, #out .verdict .meaning { color: black !important; }
 
 .large-dropdown input,
 .large-dropdown sorted-list,
