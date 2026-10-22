@@ -180,8 +180,8 @@ with tempfile.TemporaryDirectory(prefix="arabizi-") as data:
 
 # ---------------------------------------------------------------- Replies
 # The same for every dialect; {w} is the user's spelling
-HIT = 'Correct! "{w}" is how people write it.'
-MISS = 'Not quite. "{w}" isn\'t a spelling we know for this word.'
+HIT = 'Right! We have indeed encounter the spelling "{w}" before.'
+# MISS = 'Not quite. "{w}" isn\'t a spelling we know for this word.'
 MISS_SAVED = 'Not quite. "{w}" isn\'t a spelling we know for this word yet. Thanks, we\'ve added it to our list.'
 INVALID = 'Please use Latin letters and numbers only.'
 
@@ -398,7 +398,10 @@ footer { display: none !important; }
 .large-dropdown ul li {
     font-size: 10px !important;
 }
+
+#credits { font-size: 10px; color: var(--ax-muted); text-align: center; margin-top: 12px; }
 """.replace("STAR", STAR)
+
 # One flag per dialect, keyed on the radio's value (the dialect code)
 CSS += "".join(f'#dialects label:has(input[value="{k}"])::before {{ background-image: url({uri}); }}\n'
                for k, uri in FLAG_URI.items())
@@ -441,6 +444,10 @@ with gr.Blocks(title="Arabizi") as demo:
                 check_btn = gr.Button("Check", elem_id="check", scale=0, interactive=False)
             with gr.Column(elem_id="result"):
                 out = gr.HTML(IDLE, elem_id="out", padding=False)
+        
+        # Add a textbox with static text for credits with the name "Ahmed Amine Ben Abdallah" and linking to "https://huggingface.co/ahmedba100"
+        # Make sure this works with Gradio's HTML component and is styled appropriately
+        credits = gr.HTML(value='Credits: <a href="https://huggingface.co/ahmedba100" target="_blank">Ahmed Amine Ben Abdallah</a>', elem_id="credits")
     visit = gr.State(None)  # this visit's submission files (see save_submission); starts empty on each page load
 
     dialect.change(choose, dialect, [wordpick, out, word, check_btn])
