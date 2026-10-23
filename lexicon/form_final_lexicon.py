@@ -57,9 +57,12 @@ def main():
             "This word is not a dish, tchebchaq": "tchebchaq",
         }
         final_df = final_df.map(lambda v: corrected_entries_dict.get(v, v))
+        final_df.rename(columns={"Respondent_ID": "Participant_ID"}, inplace=True)
 
-        final_df.to_csv(Path(OUTPUT_DIR, f"{dialect}_lexicon_final.tsv", sep="\t"))
+        final_df.to_csv(Path(OUTPUT_DIR, f"{dialect}_lexicon_final_cased.tsv"), sep="\t", index=False)
 
+        final_df = final_df.map(lambda e: e.lower() if isinstance(e, str) else e)
+        final_df.to_csv(Path(OUTPUT_DIR, f"{dialect}_lexicon_final_uncased.tsv"), sep="\t", index=False)
 
 if __name__ == "__main__":
     main()
