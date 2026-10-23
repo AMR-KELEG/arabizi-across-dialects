@@ -1,6 +1,6 @@
 # Romanized Arabic Across Dialects: Views, Usage Patterns, and Linguistic Variation
 
-[![Model on Huggingface](https://img.shields.io/badge/🤗-Model%20-yellow.svg)](https://huggingface.co/collections/VARabi/romanized-arabic-across-dialects) [![arXiv](https://img.shields.io/badge/arXiv-2310.13747-00ff00.svg)](https://arxiv.org/abs/2608.02555)
+[![Released Artifacts on Huggingface](https://img.shields.io/badge/🤗-Model%20-yellow.svg)](https://huggingface.co/collections/VARabi/romanized-arabic-across-dialects) [![arXiv](https://img.shields.io/badge/arXiv-2310.13747-00ff00.svg)](https://arxiv.org/abs/2608.02555)
 
 
 This is the codebase accompanying the `Romanized Arabic Across Dialects: Views, Usage Patterns, and Linguistic Variation` paper accepted at EMNLP 2026 (Findings).
